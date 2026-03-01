@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>单词闯关挑战 - 大学英语IV</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            width: 100%;
+            max-width: 500px;
+            overflow: hidden;
+        }
+        .screen {
+            display: none;
+            padding: 30px;
+            animation: fadeIn 0.5s ease;
+        }
+        .screen.active { display: block; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .login-header { text-align: center; margin-bottom: 30px; }
+        .login-header h1 { color: #333; font-size: 24px; margin-bottom: 10px; }
+        .login-header p { color: #666; font-size: 14px; }
+        .form-group { margin-bottom: 20px; }
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        .btn {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .btn:active { transform: scale(0.98); }
+        .game-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+        .player-info { font-size: 14px; color: #666; }
+        .player-info span { color: #667eea; font-weight: 600; }
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 4px;
+            margin-bottom: 30px;
+            overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            transition: width 0.5s ease;
+            border-radius: 4px;
+        }
+        .sentence-container {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 25px;
+            line-height: 1.8;
+            font-size: 18px;
+            color: #333;
+            border-left: 4px solid #667eea;
+        }
+        .blank {
+            display: inline-block;
+            min-width: 100px;
+            height: 35px;
+            background: white;
+            border: 2px dashed #667eea;
+            border-radius: 5px;
+            margin: 0 5px;
+            vertical-align: middle;
+            text-align: center;
+            line-height: 31px;
+            color: #667eea;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .blank.filled { border-style: solid; background: #e3f2fd; }
+        .blank.correct { border-color: #4caf50; background: #e8f5e9; color: #4caf50; }
+        .blank.wrong { border-color: #f44336; background: #ffebee; color: #f44336; animation: shake 0.5s; }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+        .word-bank {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        .word {
+            padding: 10px 20px;
+            background: white;
+            border: 2px solid #667eea;
+            border-radius: 25px;
+            color: #667eea;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            user-select: none;
+        }
+        .word:hover {
+            background: #667eea;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        .word.used { opacity: 0.3; pointer-events: none; transform: scale(0.9); }
+        .controls { display: flex; gap: 10px; }
+        .btn-secondary {
+            flex: 1;
+            padding: 12px;
+            background: #f0f0f0;
+            color: #666;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .btn-secondary:hover { background: #e0e0e0; }
+        .result-header { text-align: center; margin-bottom: 30px; }
+        .trophy { font-size: 80px; margin-bottom: 20px; }
+        .score { font-size: 48px; color: #667eea; font-weight: bold; margin-bottom: 10px; }
+        .result-message { color: #666; font-size: 16px; line-height: 1.6; }
+        .stats {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+        }
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+        .stat-item:last-child { margin-bottom: 0; }
+        .stat-label { color: #666; }
+        .stat-value { color: #333; font-weight: 600; }
+        .level-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .level-btn {
+            aspect-ratio: 1;
+            border: 2px solid #e0e0e0;
+            border-radius: 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: white;
+        }
+        .level-btn:hover:not(.locked) {
+            border-color: #667eea;
+            transform: translateY(-5px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.3);
+        }
+        .level-btn.locked { opacity: 0.5; cursor: not-allowed; background: #f5f5f5; }
+        .level-btn.completed { border-color: #4caf50; background: #e8f5e9; }
+        .level-number { font-size: 24px; font-weight: bold; color: #333; }
+        .level-btn.completed .level-number { color: #4caf50; }
+        .level-status { font-size: 12px; color: #666; margin-top: 5px; }
+        .timer { text-align: center; font-size: 20px; color: #667eea; font-weight: 600; margin-bottom: 15px; }
+        .hint-btn {
+            background: #ffd700;
+            color: #333;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            cursor: pointer;
+            margin-bottom: 15px;
+            transition: all 0.3s;
+        }
+        .hint-btn:hover { transform: scale(1.05); }
+        .hint-text {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 10px;
+            margin-bottom: 15px;
+            border-radius: 5px;
+            font-size: 14px;
+            color: #856404;
+            display: none;
+        }
+        .hint-text.show { display: block; animation: slideDown 0.3s ease; }
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 登录界面 -->
+        <div class="screen active" id="loginScreen">
+            <div class="login-header">
+                <h1>🎮 单词闯关挑战</h1>
+                <p>《大学英语IV》课前热身</p>
+            </div>
+            <form id="loginForm">
+                <div class="form-group">
+                    <label>学号</label>
+                    <input type="text" id="studentId" placeholder="请输入学号" required>
+                </div>
+                <div class="form-group">
+                    <label>姓名</label>
+                    <input type="text" id="studentName" placeholder="请输入姓名" required>
+                </div>
+                <button type="submit" class="btn">开始挑战</button>
+            </form>
+        </div>
+
+        <!-- 关卡选择 -->
+        <div class="screen" id="levelScreen">
+            <div class="login-header">
+                <h1>选择关卡</h1>
+                <p id="welcomeText">欢迎，同学！</p>
+            </div>
+            <div class="level-grid" id="levelGrid"></div>
+        </div>
+
+        <!-- 游戏界面 -->
+        <div class="screen" id="gameScreen">
+            <div class="game-header">
+                <div class="player-info">
+                    关卡 <span id="currentLevel">1</span>/5 | 
+                    得分: <span id="currentScore">0</span>
+                </div>
+                <div class="timer" id="timer">00:00</div>
+            </div>
+            
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+            </div>
+
+            <button class="hint-btn" onclick="showHint()">💡 提示 (-5分)</button>
+            <div class="hint-text" id="hintText"></div>
+
+            <div class="sentence-container" id="sentenceContainer"></div>
+
+            <div class="word-bank" id="wordBank"></div>
+
+            <div class="controls">
+                <button class="btn-secondary" onclick="resetLevel()">重置</button>
+                <button class="btn-secondary" onclick="checkAnswer()">提交答案</button>
+            </div>
+        </div>
+
+        <!-- 结果界面 -->
+        <div class="screen" id="resultScreen">
+            <div class="result-header">
+                <div class="trophy" id="trophyIcon">🏆</div>
+                <div class="score" id="finalScore">0</div>
+                <div class="result-message" id="resultMessage"></div>
+            </div>
+            
+            <div class="stats">
+                <div class="stat-item">
+                    <span class="stat-label">玩家</span>
+                    <span class="stat-value" id="resultName">-</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">学号</span>
+                    <span class="stat-value" id="resultId">-</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">完成关卡</span>
+                    <span class="stat-value" id="resultLevels">0/5</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">总用时</span>
+                    <span class="stat-value" id="resultTime">00:00</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">准确率</span>
+                    <span class="stat-value" id="resultAccuracy">0%</span>
+                </div>
+            </div>
+
+            <button class="btn" onclick="location.reload()">再来一次</button>
+        </div>
+    </div>
+
+    <script>
+        const gameData = [
+            {
+                id: 1,
+                sentence: "______ development in the coming years and decades will be modeled on the results achieved now.",
+                words: ["since", "because", "although", "however", "therefore", "furthermore"],
+                correct: "since",
+                hint: "表示"因为/既然"，引导原因状语从句",
+                translation: "未来几十年的发展将以现在取得的成果为蓝本。"
+            },
+            {
+                id: 2,
+                sentence: "Since ______ in the coming years and decades will be modeled on the results achieved now.",
+                words: ["development", "improvement", "achievement", "growth", "progress", "advancement"],
+                correct: "development",
+                hint: "指"发展"，与后面的"modeled on"搭配",
+                translation: "因为未来几十年的发展将以现在取得的成果为蓝本。"
+            },
+            {
+                id: 3,
+                sentence: "Since development ______ the coming years and decades will be modeled on the results achieved now.",
+                words: ["in", "on", "at", "during", "for", "over"],
+                correct: "in",
+                hint: "表示"在...期间"，与"years"搭配",
+                translation: "因为未来几十年的发展将以现在取得的成果为蓝本。"
+            },
+            {
+                id: 4,
+                sentence: "Since development in ______ coming years and decades will be modeled on the results achieved now.",
+                words: ["the", "a", "an", "these", "those", "such"],
+                correct: "the",
+                hint: "定冠词，特指即将到来的这些年",
+                translation: "因为未来几十年的发展将以现在取得的成果为蓝本。"
+            },
+            {
+                id: 5,
+                sentence: "Since development in the coming years and decades will be ______ on the results achieved now.",
+                words: ["modeled", "based", "dependent", "built", "founded", "established"],
+                correct: "modeled",
+                hint: "be modeled on 是固定搭配，意为"以...为模型"",
+                translation: "因为未来几十年的发展将以现在取得的成果为蓝本。"
+            }
+        ];
+
+        let gameState = {
+            studentId: '',
+            studentName: '',
+            currentLevel: 0,
+            score: 0,
+            unlockedLevels: [1],
+            completedLevels: [],
+            startTime: null,
+            totalTime: 0,
+            attempts: 0,
+            correctAttempts: 0,
+            timerInterval: null,
+            selectedWords: {}
+        };
+
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            gameState.studentId = document.getElementById('studentId').value;
+            gameState.studentName = document.getElementById('studentName').value;
+            
+            document.getElementById('welcomeText').textContent = `欢迎，${gameState.studentName}同学！`;
+            showScreen('levelScreen');
+            renderLevelGrid();
+        });
+
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+        }
+
+        function renderLevelGrid() {
+            const grid = document.getElementById('levelGrid');
+            grid.innerHTML = '';
+            
+            gameData.forEach(level => {
+                const btn = document.createElement('div');
+                btn.className = 'level-btn';
+                
+                if (gameState.completedLevels.includes(level.id)) {
+                    btn.classList.add('completed');
+                } else if (!gameState.unlockedLevels.includes(level.id)) {
+                    btn.classList.add('locked');
+                }
+                
+                btn.innerHTML = `
+                    <div class="level-number">${level.id}</div>
+                    <div class="level-status">
+                        ${gameState.completedLevels.includes(level.id) ? '已完成' : 
+                          gameState.unlockedLevels.includes(level.id) ? '可挑战' : '未解锁'}
+                    </div>
+                `;
+                
+                btn.onclick = () => {
+                    if (gameState.unlockedLevels.includes(level.id)) {
+                        startLevel(level.id);
+                    }
+                };
+                
+                grid.appendChild(btn);
+            });
+        }
+
+        function startLevel(levelId) {
+            gameState.currentLevel = levelId;
+            gameState.selectedWords = {};
+            gameState.startTime = Date.now();
+            gameState.attempts = 0;
+            
+            const level = gameData.find(l => l.id === levelId);
+            
+            document.getElementById('currentLevel').textContent = levelId;
+            document.getElementById('currentScore').textContent = gameState.score;
+            document.getElementById('hintText').classList.remove('show');
+            document.getElementById('hintText').textContent = `提示：${level.hint}`;
+            
+            renderSentence(level);
+            renderWordBank(level);
+            startTimer();
+            
+            showScreen('gameScreen');
+        }
+
+        function renderSentence(level) {
+            const container = document.getElementById('sentenceContainer');
+            const parts = level.sentence.split('______');
+            
+            let html = parts[0];
+            if (parts.length > 1) {
+                html += `<span class="blank" id="blank1" onclick="clearSelection(1)"></span>` + parts[1];
+            }
+            
+            container.innerHTML = html;
+            updateProgress();
+        }
+
+        function renderWordBank(level) {
+            const bank = document.getElementById('wordBank');
+            bank.innerHTML = '';
+            
+            const shuffled = [...level.words].sort(() => Math.random() - 0.5);
+            
+            shuffled.forEach((word, index) => {
+                const span = document.createElement('span');
+                span.className = 'word';
+                span.textContent = word;
+                span.onclick = () => selectWord(word, span);
+                bank.appendChild(span);
+            });
+        }
+
+        function selectWord(word, element) {
+            const blank = document.getElementById('blank1');
+            if (!blank) return;
+            
+            if (gameState.selectedWords[1]) {
+                const prevWord = document.querySelector('.word.used');
+                if (prevWord) {
+                    prevWord.classList.remove('used');
+                }
+            }
+            
+            blank.textContent = word;
+            blank.classList.add('filled');
+            gameState.selectedWords[1] = word;
+            element.classList.add('used');
+            
+            updateProgress();
+        }
+
+        function clearSelection(index) {
+            const blank = document.getElementById(`blank${index}`);
+            if (!blank || !gameState.selectedWords[index]) return;
+            
+            const word = gameState.selectedWords[index];
+            const wordElements = document.querySelectorAll('.word');
+            wordElements.forEach(el => {
+                if (el.textContent === word && el.classList.contains('used')) {
+                    el.classList.remove('used');
+                }
+            });
+            
+            blank.textContent = '';
+            blank.classList.remove('filled');
+            delete gameState.selectedWords[index];
+            
+            updateProgress();
+        }
+
+        function updateProgress() {
+            const filled = Object.keys(gameState.selectedWords).length;
+            const percent = (filled / 1) * 100;
+            document.getElementById('progressFill').style.width = percent + '%';
+        }
+
+        function startTimer() {
+            if (gameState.timerInterval) clearInterval(gameState.timerInterval);
+            
+            gameState.timerInterval = setInterval(() => {
+                const elapsed = Math.floor((Date.now() - gameState.startTime) / 1000);
+                const minutes = Math.floor(elapsed / 60).toString().padStart(2, '0');
+                const seconds = (elapsed % 60).toString().padStart(2, '0');
+                document.getElementById('timer').textContent = `${minutes}:${seconds}`;
+            }, 1000);
+        }
+
+        function showHint() {
+            if (gameState.score >= 5) {
+                gameState.score -= 5;
+                document.getElementById('currentScore').textContent = gameState.score;
+                document.getElementById('hintText').classList.add('show');
+            } else {
+                alert('积分不足！需要5分才能查看提示。');
+            }
+        }
+
+        function resetLevel() {
+            gameState.selectedWords = {};
+            document.querySelectorAll('.word').forEach(w => w.classList.remove('used'));
+            document.querySelectorAll('.blank').forEach(b => {
+                b.textContent = '';
+                b.classList.remove('filled', 'correct', 'wrong');
+            });
+            updateProgress();
+        }
+
+        function checkAnswer() {
+            const level = gameData.find(l => l.id === gameState.currentLevel);
+            const selected = gameState.selectedWords[1];
+            
+            if (!selected) {
+                alert('请先选择一个单词！');
+                return;
+            }
+            
+            gameState.attempts++;
+            const blank = document.getElementById('blank1');
+            
+            if (selected === level.correct) {
+                blank.classList.remove('filled');
+                blank.classList.add('correct');
+                gameState.correctAttempts++;
+                
+                const timeBonus = Math.max(0, 30 - Math.floor((Date.now() - gameState.startTime) / 1000));
+                const levelScore = 20 + timeBonus;
+                gameState.score += levelScore;
+                
+                clearInterval(gameState.timerInterval);
+                
+                setTimeout(() => {
+                    alert(`🎉 回答正确！\n获得 ${levelScore} 分\n\n${level.translation}`);
+                    
+                    if (!gameState.completedLevels.includes(level.id)) {
+                        gameState.completedLevels.push(level.id);
+                        if (level.id < gameData.length) {
+                            gameState.unlockedLevels.push(level.id + 1);
+                        }
+                    }
+                    
+                    if (gameState.completedLevels.length === gameData.length) {
+                        showFinalResult();
+                    } else {
+                        showScreen('levelScreen');
+                        renderLevelGrid();
+                    }
+                }, 500);
+            } else {
+                blank.classList.remove('filled');
+                blank.classList.add('wrong');
+                gameState.score = Math.max(0, gameState.score - 5);
+                document.getElementById('currentScore').textContent = gameState.score;
+                
+                setTimeout(() => {
+                    blank.classList.remove('wrong');
+                    blank.classList.add('filled');
+                }, 1000);
+            }
+        }
+
+        function showFinalResult() {
+            showScreen('resultScreen');
+            
+            const totalTime = Math.floor((Date.now() - gameState.startTime) / 1000);
+            const minutes = Math.floor(totalTime / 60).toString().padStart(2, '0');
+            const seconds = (totalTime % 60).toString().padStart(2, '0');
+            const accuracy = Math.round((gameState.correctAttempts / gameState.attempts) * 100) || 0;
+            
+            document.getElementById('finalScore').textContent = gameState.score;
+            document.getElementById('resultName').textContent = gameState.studentName;
+            document.getElementById('resultId').textContent = gameState.studentId;
+            document.getElementById('resultLevels').textContent = `${gameState.completedLevels.length}/${gameData.length}`;
+            document.getElementById('resultTime').textContent = `${minutes}:${seconds}`;
+            document.getElementById('resultAccuracy').textContent = `${accuracy}%`;
+            
+            let message = '';
+            let icon = '';
+            if (gameState.score >= 100) {
+                icon = '🏆';
+                message = '太棒了！你是单词大师！';
+            } else if (gameState.score >= 80) {
+                icon = '🥈';
+                message = '表现优秀！继续保持！';
+            } else if (gameState.score >= 60) {
+                icon = '🥉';
+                message = '不错！还有进步空间！';
+            } else {
+                icon = '💪';
+                message = '加油！多练习会更好！';
+            }
+            
+            document.getElementById('trophyIcon').textContent = icon;
+            document.getElementById('resultMessage').textContent = message;
+            
+            submitResults();
+        }
+
+        function submitResults() {
+            const data = {
+                studentId: gameState.studentId,
+                studentName: gameState.studentName,
+                score: gameState.score,
+                completedLevels: gameState.completedLevels,
+                accuracy: Math.round((gameState.correctAttempts / gameState.attempts) * 100) || 0,
+                timestamp: new Date().toISOString()
+            };
+            
+            console.log('游戏数据（可复制保存）:', JSON.stringify(data, null, 2));
+            
+            // 创建可复制的文本
+            const resultText = `
+学号：${data.studentId}
+姓名：${data.studentName}
+得分：${data.score}
+完成关卡：${data.completedLevels.length}/5
+准确率：${data.accuracy}%
+时间：${new Date().toLocaleString()}
+            `.trim();
+            
+            // 尝试复制到剪贴板
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(resultText).then(() => {
+                    console.log('成绩已复制到剪贴板');
+                });
+            }
+        }
+    </script>
+</body>
+</html>
